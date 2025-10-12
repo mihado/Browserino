@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Foundation
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var selectorWindow: BrowserinoWindow?
@@ -118,15 +119,32 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     
     func application(_ application: NSApplication, open urls: [URL]) {
+        var processedUrls = urls
+        
         if urls.count == 1 {
-            let url = urls.first!.absoluteString
+            let url = urls.first!
+            
+            if url.scheme == "browserino" && url.host == "open" {
+                if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+                   let queryItems = components.queryItems,
+                   let encodedUrl = queryItems.first(where: { $0.name == "url" })?.value,
+                   let decodedData = Data(base64Encoded: encodedUrl),
+                   let decodedUrlString = String(data: decodedData, encoding: .utf8),
+                   let decodedUrl = URL(string: decodedUrlString) {
+                    processedUrls = [decodedUrl]
+                } else {
+                    return
+                }
+            }
+            
+            let urlString = processedUrls.first!.absoluteString
 
             for rule in rules {
                 let regex = try? Regex(rule.regex).ignoresCase()
                 
-                if let regex, url.firstMatch(of: regex) != nil {
+                if let regex, urlString.firstMatch(of: regex) != nil {
                     BrowserUtil.openURL(
-                        urls,
+                        processedUrls,
                         app: rule.app,
                         isIncognito: false
                     )
@@ -161,7 +179,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         
         selectorWindow!.contentView = NSHostingView(
             rootView: PromptView(
-                urls: urls
+                urls: processedUrls
             )
         )
         
