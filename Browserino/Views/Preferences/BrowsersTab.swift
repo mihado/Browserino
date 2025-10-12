@@ -15,7 +15,7 @@ struct BrowsersTab: View {
     private func move(from source: IndexSet, to destination: Int) {
         browsers.move(fromOffsets: source, toOffset: destination)
     }
-    
+
     private func privateArg(for key: String) -> Binding<String> {
         return .init(
             get: { self.privateArgs[key, default: ""] },
@@ -23,7 +23,7 @@ struct BrowsersTab: View {
     }
 
     var body: some View {
-        VStack (alignment: .leading) {
+        VStack(alignment: .leading) {
             List {
                 ForEach(Array(browsers.enumerated()), id: \.offset) { offset, browser in
                     if let bundle = Bundle(url: browser) {
@@ -33,22 +33,22 @@ struct BrowsersTab: View {
                                     .system(size: 16)
                                 )
                                 .frame(width: 30, alignment: .leading)
-                            
+
                             Image(nsImage: NSWorkspace.shared.icon(forFile: bundle.bundlePath))
                                 .resizable()
                                 .frame(width: 32, height: 32)
-                            
+
                             Spacer()
                                 .frame(width: 8)
-                            
+
                             Text(bundle.infoDictionary!["CFBundleName"] as! String)
                                 .font(
                                     .system(size: 14)
                                 )
-                            
+
                             Spacer()
                                 .frame(width: 32)
-                            
+
                             TextField(
                                 "Private argument",
                                 text: privateArg(for: bundle.bundleIdentifier!)
@@ -56,17 +56,17 @@ struct BrowsersTab: View {
                             .font(
                                 .system(size: 14).monospaced()
                             )
-                            
+
                             Spacer()
                                 .frame(width: 32)
-                            
+
                             ShortcutButton(
                                 browserId: bundle.bundleIdentifier!
                             )
-                            
+
                             Spacer()
                                 .frame(width: 8)
-                            
+
                             Button(action: {
                                 if let idx = hiddenBrowsers.firstIndex(of: browser) {
                                     hiddenBrowsers.remove(at: idx)
@@ -75,7 +75,8 @@ struct BrowsersTab: View {
                                 }
                             }) {
                                 Image(
-                                    systemName: hiddenBrowsers.contains(browser) ? "eye.slash.fill" : "eye.fill")
+                                    systemName: hiddenBrowsers.contains(browser)
+                                        ? "eye.slash.fill" : "eye.fill")
                             }
                             .buttonStyle(.plain)
                         }
@@ -91,16 +92,17 @@ struct BrowsersTab: View {
                     )
                 }
             }
-            
-            Text("Drag and drop to reorder. Press record to assign a shortcut")
-                .font(.subheadline)
-                .foregroundStyle(.primary.opacity(0.5))
-                .frame(maxWidth: .infinity)
+
+            Text(
+                "Drag and drop to reorder. Press record to assign a shortcut. Click on eye to hide unwanted browsers from prompt"
+            )
+            .font(.subheadline)
+            .foregroundStyle(.primary.opacity(0.5))
+            .frame(maxWidth: .infinity)
         }
         .padding(.bottom, 20)
     }
 }
-
 
 #Preview {
     PreferencesView()

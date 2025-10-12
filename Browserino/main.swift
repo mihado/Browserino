@@ -5,8 +5,8 @@
 //  Created by Aleksandr Strizhnev on 06.06.2024.
 //
 
-import Foundation
 import AppKit
+import Foundation
 
 let app = BrowserinoApplication.shared
 let delegate = AppDelegate()

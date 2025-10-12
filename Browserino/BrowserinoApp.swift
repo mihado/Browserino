@@ -12,29 +12,61 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var preferencesWindow: NSWindow?
     
     @AppStorage("rules") private var rules: [Rule] = []
+    @AppStorage("showInMenuBar") private var showInMenuBar: Bool = true
     
     var statusMenu: NSMenu!
     var statusBarItem: NSStatusItem!
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        statusBarItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        let statusButton = statusBarItem!.button
-        statusButton!.image = NSImage.menuIcon
+        setupStatusBar()
         
-        let preferences = NSMenuItem(title: "Preferences...", action: #selector(openPreferences), keyEquivalent: "")
-        let quit = NSMenuItem(title: "Quit", action: #selector(quitApp), keyEquivalent: "")
-        
-        statusMenu = NSMenu()
-        
-        statusMenu!.addItem(preferences)
-        statusMenu!.addItem(.separator())
-        statusMenu!.addItem(quit)
-        
-        statusBarItem!.menu = statusMenu!
+        UserDefaults.standard.addObserver(self, forKeyPath: "showInMenuBar", options: [.new], context: nil)
         
         if UserDefaults.standard.object(forKey: "browsers") == nil {
             openPreferences()
         }
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
+        self.openPreferences()
+        return true
+    }
+    
+    func setupStatusBar() {
+        if showInMenuBar {
+            if statusBarItem == nil {
+                statusBarItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+                let statusButton = statusBarItem!.button
+                statusButton!.image = NSImage.menuIcon
+                
+                let preferences = NSMenuItem(title: "Preferences...", action: #selector(openPreferences), keyEquivalent: "")
+                let quit = NSMenuItem(title: "Quit", action: #selector(quitApp), keyEquivalent: "")
+                
+                statusMenu = NSMenu()
+                
+                statusMenu!.addItem(preferences)
+                statusMenu!.addItem(.separator())
+                statusMenu!.addItem(quit)
+                
+                statusBarItem!.menu = statusMenu!
+            }
+        } else {
+            if statusBarItem != nil {
+                NSStatusBar.system.removeStatusItem(statusBarItem!)
+                statusBarItem = nil
+            }
+        }
+    }
+    
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        if keyPath == "showInMenuBar" {
+            setupStatusBar()
+            NSApp.setActivationPolicy(.accessory)
+        }
+    }
+    
+    deinit {
+        UserDefaults.standard.removeObserver(self, forKeyPath: "showInMenuBar")
     }
     
     func application(_ application: NSApplication, willContinueUserActivityWithType userActivityType: String) -> Bool {
