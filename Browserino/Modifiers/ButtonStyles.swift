@@ -28,6 +28,7 @@ struct SelectButtonStyle: ButtonStyle {
     func makeBody(configuration: Self.Configuration) -> some View {
         configuration.label
             .contentShape(RoundedRectangle(cornerSize: CGSize(width: 8, height: 8)))
+            .foregroundStyle(self.selected ? Color.white : Color.primary)
             .background(configuration.isPressed || selected ? Color.accentColor : .clear)
             .modifier(BackgroundOnHover())
             .cornerRadius(8)
