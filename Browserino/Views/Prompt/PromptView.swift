@@ -13,16 +13,16 @@ struct PromptView: View {
     @AppStorage("hiddenBrowsers") private var hiddenBrowsers: [URL] = []
     @AppStorage("apps") private var apps: [App] = []
     @AppStorage("shortcuts") private var shortcuts: [String: String] = [:]
-    
+
     @AppStorage("copy_closeAfterCopy") private var closeAfterCopy: Bool = false
     @AppStorage("copy_alternativeShortcut") private var alternativeShortcut: Bool = false
-    
+
     let urls: [URL]
-    
+
     @State private var opacityAnimation = 0.0
     @State private var selected = 0
     @FocusState private var focused: Bool
-    
+
     var appsForUrls: [App] {
         urls.flatMap { url in
             return apps.filter { app in
@@ -33,33 +33,34 @@ struct PromptView: View {
             !browsers.contains($0.app)
         }
     }
-    
+
     var visibleBrowsers: [URL] {
         browsers.filter { !hiddenBrowsers.contains($0) }
     }
-    
+
     func openUrlsInApp(app: App) {
-        let urls = if app.schemeOverride.isEmpty {
-            urls
-        } else {
-            urls.map {
-                let url = NSURLComponents.init(
-                    url: $0,
-                    resolvingAgainstBaseURL: true
-                )
-                url!.scheme = app.schemeOverride
-                
-                return url!.url!
+        let urls =
+            if app.schemeOverride.isEmpty {
+                urls
+            } else {
+                urls.map {
+                    let url = NSURLComponents.init(
+                        url: $0,
+                        resolvingAgainstBaseURL: true
+                    )
+                    url!.scheme = app.schemeOverride
+
+                    return url!.url!
+                }
             }
-        }
-        
+
         BrowserUtil.openURL(
             urls,
             app: app.app,
             isIncognito: false
         )
     }
-    
+
     var body: some View {
         VStack {
             ScrollViewReader { scrollViewProxy in
@@ -84,11 +85,12 @@ struct PromptView: View {
                                     )
                                 }
                             }
-                            
+
                             Divider()
                         }
-                        
-                        ForEach(Array(visibleBrowsers.enumerated()), id: \.offset) { index, browser in
+
+                        ForEach(Array(visibleBrowsers.enumerated()), id: \.offset) {
+                            index, browser in
                             if let bundle = Bundle(url: browser) {
                                 PromptItem(
                                     browser: browser,
@@ -136,9 +138,9 @@ struct PromptView: View {
                             )
                         }
                     }) {}
-                        .opacity(0)
-                        .keyboardShortcut(.defaultAction)
-                    
+                    .opacity(0)
+                    .keyboardShortcut(.defaultAction)
+
                     Button(action: {
                         if selected < appsForUrls.count {
                             openUrlsInApp(app: appsForUrls[selected])
@@ -150,14 +152,14 @@ struct PromptView: View {
                             )
                         }
                     }) {}
-                        .opacity(0)
-                        .keyboardShortcut(.return, modifiers: [.shift])
-                    
+                    .opacity(0)
+                    .keyboardShortcut(.return, modifiers: [.shift])
+
                     Button(action: {
                         NSApplication.shared.keyWindow?.close()
                     }) {}
-                        .opacity(0)
-                        .keyboardShortcut(.cancelAction)
+                    .opacity(0)
+                    .keyboardShortcut(.cancelAction)
                 }
                 .onAppear {
                     focused.toggle()
@@ -167,16 +169,16 @@ struct PromptView: View {
                 }
                 .scrollEdgeEffectDisabledCompat()
             }
-            
+
             Divider()
-            
+
             if let host = urls.first?.host() {
                 Button(action: {
                     let pasteboard = NSPasteboard.general
                     pasteboard.declareTypes([.string], owner: nil)
                     pasteboard.setString(urls.first?.absoluteString ?? "", forType: .string)
-                    
-                    if (closeAfterCopy) {
+
+                    if closeAfterCopy {
                         NSApplication.shared.keyWindow?.close()
                     }
                 }) {
@@ -189,6 +191,7 @@ struct PromptView: View {
                     KeyEquivalent("c"),
                     modifiers: alternativeShortcut ? [.command] : [.command, .option]
                 )
+                .toolTip(urls.first?.absoluteString ?? "")
             }
         }
         .padding(12)
